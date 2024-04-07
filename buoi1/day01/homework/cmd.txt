@@ -1,0 +1,1 @@
+docker run -d -p 8080:80 -v /vagrant/day01/homework/index.html:/usr/share/nginx/html/index.html nginx
