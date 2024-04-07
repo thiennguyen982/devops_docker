@@ -1,0 +1,7 @@
+version: '3.7'
+
+services:
+ nginx_c:
+  image: 'nginx'
+  container_name: nginx_c
+  hostname: nginx_c
