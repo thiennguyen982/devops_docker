@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+ postgres_c:
+  image: postgres
+  hostname: PostGre_Host
+  container_name: postgres_c
+  environment:
+   - POSTGRES_PASSWORD=p@ssw0rd
+  ports:
+   - '54322:5432'
+

@@ -13,7 +13,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         .container {
@@ -27,6 +27,36 @@
         h1 {
             color: #333;
         }
+
+        ol {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+            text-align: left;
+            counter-reset: list-counter;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        li::before {
+            content: counter(list-counter);
+            counter-increment: list-counter;
+            color: #333;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-right: 5px;
+        }
+
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -34,6 +64,20 @@
         <h1>Welcome To The DevOps Class - Docker Session</h1>
         <p>This is a sample paragraph added to the body of the HTML document. You can add more content here.</p>
         <button>Click me</button>
+        <!-- Added styled ordered list without bullets -->
+        <ol>
+            <li>Introduction to Docker</li>
+            <li>Docker Installation and Setup</li>
+            <li>Docker Images and Containers</li>
+            <li>Docker Networking</li>
+            <li>Docker Volumes and Data Management</li>
+            <li>Orchestration with Docker Compose</li>
+            <li>Containerizing Applications</li>
+        </ol>
+        <footer>
+            <p>Contact us: example@example.com | Phone: +123456789</p>
+        </footer>
     </div>
+    <!-- Added footer with contact information -->
 </body>
 </html>
