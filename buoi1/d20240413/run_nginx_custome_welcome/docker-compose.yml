@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+ nginx_c:
+  image: nginx
+  ports:
+   - 88:80

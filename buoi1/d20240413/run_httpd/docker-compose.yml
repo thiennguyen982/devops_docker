@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+ nginx_c:
+  image: httpd
+  hostname: Apache_host
+  container_name: Apache_container
+  ports:
+   - 8080:80
+  volumes:
+    - "./website:/usr/local/apache2/htdocs"
