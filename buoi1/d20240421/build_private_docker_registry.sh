@@ -28,6 +28,8 @@ docker push 192.168.15.11:5000/alpine:v1
 #Issue => The push refers to repository [192.168.15.11:5000/alpine]
 #Get "https://192.168.15.11:5000/v2/": 
 #http: server gave HTTP response to HTTPS client
+#Root-Cause:
+#Broser not support the HTTP response
 #Fixing:
 # vi /etc/docker/daemon.json
 # Inserting:
