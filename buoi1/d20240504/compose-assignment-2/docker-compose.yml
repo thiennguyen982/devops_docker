@@ -1,0 +1,49 @@
+# docker network create -d bridge mybridge
+# docker run -d \
+#   --net mybridge
+#   --name postgres_c
+#   -e POSTGRES_PASSWORD=123we
+#   -e POSTGRES_USER=postgres postgres
+
+# docker run -d \
+#   --net mybridge
+#   --name drupal_c
+#   --publish 8080:80 drupal
+
+version: '3.6'
+
+services:
+
+  drupal_c:
+    image: drupal
+    ports:
+      - "8080:80"
+    networks:
+      - mybridge
+    volumes:
+      - drupal-modules:/var/www/html/modules
+      - drupal-profiles:/var/www/html/profiles
+      - drupal-sites:/var/www/html/sites
+      - drupal-themes:/var/www/html/themes
+
+  postgres_c:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=123we
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgred_db
+    networks: 
+      - mybridge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+networks:
+  mybridge:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  drupal-modules:
+  drupal-profiles:
+  drupal-themes:
+  drupal-sites:
