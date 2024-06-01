@@ -1,0 +1,6 @@
+confluent-kafka
+fastapi[all]
+python-dotenv
+numpy
+pandas
+Faker
