@@ -1,0 +1,42 @@
+version: '3.6'
+
+services:
+
+  drupal_c:
+    # image: drupal
+    build:
+      context: .
+      dockerfile: AnswerB1.Dockerfile
+    ports:
+      - "8080:80"
+    networks:
+      - mybridge
+    volumes:
+      - drupal-modules:/var/www/html/modules
+      - drupal-profiles:/var/www/html/profiles
+      - drupal-sites:/var/www/html/sites
+      - drupal-themes:/var/www/html/themes
+
+  postgres_c:
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=123we
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgred_db
+    networks: 
+      - mybridge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # - drupal-data:/var/lib/postgresql/data
+
+networks:
+  mybridge:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  drupal-modules:
+  drupal-profiles:
+  drupal-themes:
+  drupal-sites:
+  # drupal-data:
