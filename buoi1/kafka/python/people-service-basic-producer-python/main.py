@@ -1,13 +1,13 @@
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
 import os
 import uuid
-from dotenv import load_dotenv
-from fastapi import FastAPI
 from confluent_kafka.admin import AdminClient, NewTopic, ConfigResource
 from confluent_kafka import KafkaException
 from confluent_kafka.error import KafkaError
 from confluent_kafka import Producer
 from commands import CreatePeopleCommand
-from entities import Person
+from entities import Person, SuccessHandler
 from typing import List
 from faker import Faker
 
@@ -18,14 +18,20 @@ app = FastAPI()
 def make_producer():
     try:
         return Producer({
-            'bootstrap.servers': os.environ['BOOTSTRAP_SERVERS']
+            'bootstrap.servers': os.environ['BOOTSTRAP_SERVERS'],
+            'linger.ms': int(os.environ['TOPICS_PEOPLE_ADV_LINGER_MS']),
+            'retries': int(os.environ['TOPICS_PEOPLE_ADV_RETRIES']),
+            'max.in.flight.requests.per.connection': int(os.environ['TOPICS_PEOPLE_ADV_INFLIGHT_REQS']),
+            'acks': os.environ['TOPICS_PEOPLE_ADV_ACKS']
         })
     except Exception as e:
         print(str(e))
+        return None
         
 @app.on_event('startup')
 async def startup_event():
     client = AdminClient({'bootstrap.servers': os.environ['BOOTSTRAP_SERVERS']})
+    
     topics = [
         NewTopic(
             topic=os.environ['TOPICS_PEOPLE_BASIC_NAME'],
@@ -39,11 +45,20 @@ async def startup_event():
             config={
                 'retention.ms': '3600000'
             }
+        ),
+        NewTopic(
+            topic=f"{os.environ['TOPICS_PEOPLE_ADV_NAME']}",
+            num_partitions=int(os.environ['TOPICS_PEOPLE_ADV_PARTITIONS']),
+            replication_factor=int(os.environ['TOPICS_PEOPLE_ADV_REPLICAS']),
+            config={
+                'retention.ms': '36000'
+            }
         )
     ]
     
     try:
         futures = client.create_topics(topics)
+        
         for topic, future in futures.items():
             try:
                 future.result()  # The result itself is None
@@ -76,6 +91,9 @@ async def create_people(cmd : CreatePeopleCommand):
     faker = Faker()
     producer = make_producer()
     
+    if not producer:
+        raise HTTPException(status_code=500, detail="Failed to create Kafka producer")
+    
     for _ in range(cmd.count):
         person = Person(
             id=str(uuid.uuid4()),
@@ -92,7 +110,8 @@ async def create_people(cmd : CreatePeopleCommand):
             producer.produce(
                 topic=os.environ['TOPICS_PEOPLE_BASIC_NAME'],
                 key=person.title.lower().replace(' ', '-').encode('utf-8'),
-                value=person.json().encode('utf-8')
+                value=person.json().encode('utf-8'),
+                callback=SuccessHandler(person)
             )
         except KafkaException as e:
             if e.args[0].code() == KafkaError._ALL_BROKERS_DOWN:
