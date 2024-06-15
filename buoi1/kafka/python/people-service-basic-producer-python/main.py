@@ -51,7 +51,7 @@ async def startup_event():
             num_partitions=int(os.environ['TOPICS_PEOPLE_ADV_PARTITIONS']),
             replication_factor=int(os.environ['TOPICS_PEOPLE_ADV_REPLICAS']),
             config={
-                'retention.ms': '36000'
+                'retention.ms': '300'
             }
         )
     ]
