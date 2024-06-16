@@ -2,7 +2,8 @@ import json
 from dotenv import load_dotenv
 import os
 import logging
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, TopicPartition
+from confluent_kafka.cimpl import OFFSET_END
 import signal
 import sys
 import threading
@@ -18,10 +19,7 @@ shutdown_event = threading.Event()
 
 def shutdown_signal_handler(signum, frame):
     print("Shutdown Detected")
-    shutdown_event.set() # Signal that shutdown is requested
-    if consumer:
-        consumer.close()
-    print("Consumer Closed")
+    shutdown_event.set()
     sys.exit(0)
     
 def consume_message():
@@ -41,43 +39,61 @@ def consume_message():
                     - Information: {record.value()}
                     - Partition: {record.partition()}
                     - Offset: {record.offset()}
-        """)        
-
+        """)
+        
+        # Manually commit the offset
+        consumer.commit(offsets=[TopicPartition(record.topic(), record.partition(), record.offset() + 1)])
+        
+        time.sleep(5)
+        
+def on_assign(consumer, partitions):
+    for tp in partitions:
+        try:
+            logger.info(f"Assigned - Topic: {tp}, Offset - {tp}")
+        except Exception as e:
+            logger.error(str(e))
+            
 def main():
+    
     global consumer
     
+    topic = os.environ['TOPICS_PEOPLE_BASIC_NAME']
+
     logger.info(f"""
                 Started Python Consumer:
-                - Topic: {os.environ['TOPICS_PEOPLE_BASIC_NAME']}
+                - Topic: {topic}
                 """)
     
     consumer = Consumer({
         'bootstrap.servers': os.environ['BOOTSTRAP_SERVERS'],
         'group.id': os.environ['CONSUMER_GROUP'],
-        'auto.offset.reset': 'latest'
+        'enable.auto.commit': False,
+        'auto.offset.reset': 'earliest'
     })
     
-    consumer.subscribe([
-        os.environ['TOPICS_PEOPLE_BASIC_NAME']
-    ])
+    consumer.subscribe([topic])
+    
     
     try:
         consume_message_thread = threading.Thread(target=consume_message)
         consume_message_thread.start()
         
-       # Periodically check the shutdown event
+        # Periodically check the shutdown event
         while not shutdown_event.is_set():
             time.sleep(0.5)
-        
+                
         # Ensure the consumer joins the processing before exiting
         consume_message_thread.join()
-            
+        
+        raise NotImplementedError
+        
     except Exception as e:
         logging.error(str(e))
 
     finally:
         if consumer:
             consumer.close()
+        print("Close consumer by the finally block")
 
 if __name__ == "__main__":
     
