@@ -1,3 +1,4 @@
+from email import message
 from dotenv import load_dotenv
 from confluent_kafka import DeserializingConsumer
 from confluent_kafka.schema_registry import SchemaRegistryClient
@@ -22,13 +23,13 @@ def make_consumer() -> DeserializingConsumer:
     #Create AvroDeserializer
     avro_deserializer = AvroDeserializer(
         schema_reg_client,
-        schemas.person_value_v1,
+        schemas.person_value_v2,
         lambda data, ctx : Person(**data)
     )
     
     #Create And Return DeserializingConsumer
     return DeserializingConsumer({
-        'bootsrap.servers': os.environ['BOOTSTRAP_SERVERS'],
+        'bootstrap.servers': os.environ['BOOTSTRAP_SERVERS'],
         'key.deserializer': StringDeserializer('utf-8'),
         'value.deserializer': avro_deserializer,
         'group.id': os.environ['CONSUMER_GROUP'],
@@ -49,7 +50,9 @@ def main():
         if msg is not None:
             person = msg.value()
             logger.info(f"""
+                        Consumed person: {person}
                         """)
+            consumer.commit(message=msg)
 
 if __name__ == "__main__":
     main()

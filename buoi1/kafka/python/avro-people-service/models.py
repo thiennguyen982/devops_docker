@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 import logging
 
 # Configure logger
@@ -8,7 +9,8 @@ logging.basicConfig(
 )
 
 class Person(BaseModel):
-    name : str
+    first_name : Optional[str]
+    last_name : Optional[str]
     title : str
     
 class SuccessHandler:

@@ -28,7 +28,7 @@ def make_producer() -> SerializingProducer:
     #Create AvroSerializer
     avro_serializer = AvroSerializer(
         schema_reg_client,
-        schemas.person_value_v1,
+        schemas.person_value_v2,
         lambda person, ctx: person.dict()
     )
     
@@ -75,18 +75,22 @@ async def create_people(cmd : CreatePeopleCommand):
     
     for _ in range(cmd.count):
         person = Person(
-            name=faker.name(),
+            first_name=faker.first_name(),
+            last_name=faker.last_name(),
             title=faker.job()
         )
         
         people.append(person)
         
-        producer.produce(
-            topic=os.environ['TOPICS_PEOPLE_AVRO_NAME'],
-            key=person.title.lower().replace(r's+', '-'),
-            value=person, 
-            on_delivery=SuccessHandler(person=person)
-        )
+        try:
+            producer.produce(
+                topic=os.environ['TOPICS_PEOPLE_AVRO_NAME'],
+                key=person.title.lower().replace(r's+', '-'),
+                value=person, 
+                on_delivery=SuccessHandler(person=person)
+            )
+        except Exception as e:
+            logger.error(str(e))
         
     producer.flush()
     
