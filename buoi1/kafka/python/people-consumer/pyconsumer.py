@@ -44,12 +44,19 @@ def consume_message():
         # Manually commit the offset
         consumer.commit(offsets=[TopicPartition(record.topic(), record.partition(), record.offset() + 1)])
         
-        time.sleep(5)
+        time.sleep(1)
         
 def on_assign(consumer, partitions):
     for tp in partitions:
         try:
-            logger.info(f"Assigned - Topic: {tp}, Offset - {tp}")
+            logger.info(f"Assigned - Topic: {tp.topic}, Partition: {tp.partition}, Offset: {consumer}")
+        except Exception as e:
+            logger.error(str(e))
+
+def on_revoke(consumer, partitions):
+    for tp in partitions:
+        try:
+            logger.info(f"Revoked - Topic: {tp.topic}, Partition: {tp.partition}, Offset: {consumer}")
         except Exception as e:
             logger.error(str(e))
             
@@ -71,7 +78,7 @@ def main():
         'auto.offset.reset': 'earliest'
     })
     
-    consumer.subscribe([topic])
+    consumer.subscribe([topic], on_assign=on_assign, on_revoke=on_revoke)
     
     
     try:
